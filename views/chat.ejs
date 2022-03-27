@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<head>
+<title> Chatting with <%= msg_recepient %> </title>
+<link rel="stylesheet" href="/chat.css">
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+<style>
+.parent{
+
+}
+a, a:visited, a:hover{
+     color:#fff;
+}
+</style>
+<script src="/socket.io/socket.io.js"></script>
+<script type = "text/javascript"
+src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script>
+const socket = io();
+socket.on('message', addMessages)
+$(() => {
+  $("#send").click(()=>{
+     sendMessage({message:$("#message").val()});
+    })
+    getMessages()
+  })
+
+function addMessages(message){
+  var who = (window.location.pathname.split('/')[2])
+  var sender = message.split(';^; ')[0]
+  var msg = message.split(';^; ')[1]
+  var hm = message.split(';^; ')[2]
+  if (sender == who){
+     $("#messages").append(
+       `<div class="message">
+       <div class="photo" style="background-image: url('https://t4.ftcdn.net/jpg/00/64/67/63/360_F_64676383_LdbmhiNM6Ypzb3FM4PPuFP9rHe7ri8Ju.jpg');">
+       </div>
+         <p class="text"> ${msg} </p>
+       </div>
+       <p class="time"> ${hm}</p><br>`)
+    } else {
+    $("#messages").append(
+     `<div class="message text-only" style="clear: both; ">
+          <div class="response">
+            <p class="text"> ${msg} </p>
+          </div>
+      </div>
+      <p class="response-time time" style="clear: both; padding-bottom: 10px;"> ${hm}</p><br>`
+   )}
+}
+
+function getMessages(){
+  var who = (window.location.pathname.split('/')[2])
+  $.get(`http://localhost:5000/messages/${who}`, (data) => {
+   data.forEach(addMessages);
+   })
+ }
+
+function sendMessage(message){
+  var who = (window.location.pathname.split('/')[2])
+  $.post(`http://localhost:5000/messages/${who}`, message)
+  $("#message").val('')
+ }
+</script>
+
+</head>
+<body>
+<div class="parent">
+  <div class="child">
+    <nav class="menu">
+      <ul class="items">
+        <a href="/"><li class="item">
+          <i class="fa fa-home" aria-hidden="true"></i>
+        </li></a>
+        <a href="/logout"><li class="item">
+          <i class="fa fa-sign-out" aria-hidden="true"></i>
+        </li></a>
+        <a href="/search"><li class="item">
+          <i class="fa fa-search" aria-hidden="true"></i>
+        </li></a>
+      </ul>
+    </nav>
+  </div>
+
+  <div class="container">
+    <section class="chat">
+      <div class="header-chat">
+        <i class="icon fa fa-user-o" aria-hidden="true"></i>
+        <h1 class="name">@<%= msg_recepient %></h1>
+      </div>
+      <div class="messages-chat" id="messages">
+
+      </div>
+      <div class="footer-chat">
+        <textarea type="text" class="write-message" id="message" minlength="1" placeholder="Type your message here"></textarea>
+        <i class="icon send fa fa-paper-plane-o clickable" id="send" aria-hidden="true"></i>
+      </div>
+    </section>
+  </div>
+</div>
+</body>

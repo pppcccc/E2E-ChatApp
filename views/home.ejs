@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<head>
+<title> Home </title>
+<link rel="stylesheet" href="/chat.css">
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+<style>
+.parent2 {
+  display: grid;
+  grid-template-columns: fit-content(50%) fit-content(50%) fit-content(50%);
+  grid-template-rows: auto;
+  justify-content: center;
+}
+</style>
+</head>
+
+<body>
+  <div class="parent">
+    <div class="child">
+      <nav class="menu">
+        <ul class="items">
+          <a href="/"><li class="item">
+            <i class="fa fa-home" aria-hidden="true"></i>
+          </li></a>
+          <a href="/logout"><li class="item">
+            <i class="fa fa-sign-out" aria-hidden="true"></i>
+          </li></a>
+          <a href="/search"><li class="item">
+            <i class="fa fa-search" aria-hidden="true"></i>
+          </li></a>
+        </ul>
+      </nav>
+    </div>
+    <div class="container">
+      <section id="chats">
+          <div class="parent2">
+          <% if (chat_usernames.length > 0) {%>
+            <% for (const chat_username of chat_usernames) {%>
+                <div class="col-mx-3 m-3">
+                    <div class="card p-3 py-4">
+                        <div class="text-center"> <img src="https://t4.ftcdn.net/jpg/00/64/67/63/360_F_64676383_LdbmhiNM6Ypzb3FM4PPuFP9rHe7ri8Ju.jpg" width="100" class="rounded-circle"> </div>
+                            <a href="/chat/<%= chat_username %>" align="center" class="profile mt-2 mb-0"> @<%= chat_username %> </a>
+                            <h5 align="center" class="mt-2 mb-0">last online: blah</h5>
+                            <br>
+                    </div>
+                </div>
+            <% } %>
+          <%} else {%>
+            <div class="alert alert-primary my-3" role="alert">
+              You have no chats. Use the search function <a href="/search" class="alert-link">here</a>.
+            </div>
+          <% } %>
+          </div>
+      </section>
+    </div>
+  </div>
+</body>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<head>
+<title> Chat App </title>
+<link rel="stylesheet" href="/chat.css">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+<style>
+
+</style>
+</head>
+
+<body>
+  <div class="container" style="margin-left: calc(55% - 650px);">
+        <section id="register_and_login">
+          <div align="center" class="parent my-5">
+            <div>
+              <h2> Register or Login to Your Account </h2>
+              <br>
+              <form action="/register" method="POST">
+                <input required="true" minlength="1" maxlength="32" type="text" id="username" name="username" placeholder="enter desired username" cols="20" rows="5"></input>
+                <br>
+                <button class="btn btn-primary my-2" type="submit" id="submit_btn">Generate Login</button>
+              </form>
+            </div>
+
+            <div class="my-5">
+              <form action="/login" method="POST">
+                <input required="true" minlength="1" maxlength="32" type="text" id="username" name="username" placeholder="enter your username" cols="20" rows="5"></input>
+                <input required="true" minlength="1" type="password" id="wordphrase" name="wordphrase" placeholder="enter 24 word passphrase" cols="40" rows="5"></input>
+                <br>
+                <button class="btn btn-primary my-2" type="submit" id="submit_btn">Login</button>
+              </form>
+            </div>
+          </div>
+        </section>
+  </div>
+</body>

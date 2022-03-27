@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<head>
+<title> Registered </title>
+<link rel="stylesheet" href="/chat.css">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+<style>
+.form-control:focus{
+    border-color: #ff0000;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+}
+</style>
+
+<script>
+  function copy_text() {
+    var copyText = document.getElementById("seed");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(copyText.value);
+    document.getElementById("copy_btn").value="Copied";
+  }
+</script>
+</head>
+
+<body>
+  <div class="parent">
+    <div class="container">
+        <section id="register_and_login">
+          <div align="center" class="my-5">
+            <div>
+              <div class="px-3 py-3">
+                <h2 class="text text-danger"> SAVE YOUR ACCOUNT'S SEED PHRASE (PASSWORD) OFFLINE FOR MAXIMUM SECURITY! </h2>
+                <h3 class="text text-danger my-3"> This will only be shown once. Write it down on paper. </h3>
+                <div class="form-group border-focus">
+                  <textarea class="form-control mt-4" cols="30" rows="4" id="seed" style="resize: none;"><%= mnemonic %></textarea>
+                </div>
+                <br>
+                <button class="btn btn-success" id="copy_btn" onclick="copy_text()"> Copy </button>
+              </div>
+              <br>
+              <a href="/"> All done? Start chatting here! </a>
+            </div>
+          </div>
+        </section>
+    </div>
+  </div>
+</body>

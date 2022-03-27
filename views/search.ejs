@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<head>
+<title> Search </title>
+<link rel="stylesheet" href="/chat.css">
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+</head>
+
+<body>
+<div class="parent">
+  <div class="child">
+    <nav class="menu">
+      <ul class="items">
+        <a href="/"><li class="item">
+          <i class="fa fa-home" aria-hidden="true"></i>
+        </li></a>
+        <a href="/logout"><li class="item">
+          <i class="fa fa-sign-out" aria-hidden="true"></i>
+        </li></a>
+        <a href="/search"><li class="item">
+          <i class="fa fa-search" aria-hidden="true"></i>
+        </li></a>
+      </ul>
+    </nav>
+  </div>
+  <div class="container">
+      <section id="search">
+        <div>
+          <form action="/start_chat" method="POST">
+            <div class="input-group input-group-lg my-3">
+              <input class="form-control" type="text" name="msg_recepient" id="msg_recepient" placeholder="Start chatting with a user."></input>
+              <button class="btn btn-primary" type="submit" id="submit"> Chat </button>
+            </div>
+          </form>
+        </div>
+      </section>
+  </div>
+</div>
+</body>
