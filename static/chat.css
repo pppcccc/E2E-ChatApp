@@ -5,22 +5,18 @@ body {
 
 
 .container {
-  float: left;
   background-color: #FFF;
   box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
   height: 700px;
   overflow-y: scroll;
-  display: inline-block;
 }
 
 /* ===== MENU ===== */
-.parent{
-  margin-left: calc(55% - 650px);
-}
 
 .menu {
-  display: inline-block;
-  float:left;
+  float: left;
+  position: relative;
+  left: 15%;
   height: 700px;
   width: 70px;
   background: #4768b5;
@@ -81,7 +77,6 @@ body {
 }
 
 .timer {
-  margin-left: 15%;
   font-family:'Open Sans', sans-serif;
   font-size: 11px;
   padding: 3px 8px;
@@ -92,13 +87,12 @@ body {
 }
 
 .chat {
-  width: 100%;
+  width: calc(100%);
 }
 
 .header-chat {
   background-color: #FFF;
   height: 90px;
-  width: 100%;
   box-shadow: 0px 3px 2px rgba(0,0,0,0.100);
   display:flex;
   align-items: center;
@@ -119,12 +113,11 @@ body {
 }
 
 .chat .header-chat .right {
-  position: absolute;
-  right: 40px;
+  margin-left: 5%;
 }
 
 .chat .messages-chat {
-  padding: 25px 35px;
+  padding: 25px 20px;
   white-space: normal;
 }
 
@@ -150,7 +143,7 @@ body {
 .chat .messages-chat .text {
   margin: 0 35px;
   background-color: #f6f6f6;
-  padding: 15px;
+  padding: 12px;
   border-radius: 12px;
 }
 
@@ -160,10 +153,10 @@ body {
 }
 
 .time {
-  font-size: 10px;
-  color:lightgrey;
+  font-size: 11px;
+  color:grey;
   margin-bottom:20px;
-  margin-left: 55px;
+  margin-left: 90px;
 }
 
 .response-time {
@@ -225,7 +218,7 @@ body {
 
 .write-message {
   border:none !important;
-  width:60%;
+  width:80%;
   height: 50px;
   margin-left: 20px;
   padding: 10px;
