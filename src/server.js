@@ -3,6 +3,7 @@
 // https://www.pcworld.com/article/394182/what-is-signal-encrypted-messaging-app.html
 // https://www.freecodecamp.org/news/simple-chat-application-in-node-js-using-express-mongoose-and-socket-io-ee62d94f5804/
 // https://codepen.io/ThomasDaubenton/pen/QMqaBN
+// https://www.section.io/engineering-education/creating-a-real-time-chat-app-with-react-socket-io-with-e2e-encryption/
 
 require("dotenv").config()
 const express = require("express")
@@ -11,10 +12,13 @@ const mongoose = require("mongoose")
 const path = require('path')
 const fs = require("fs");
 const bodyParser = require('body-parser');
+const socketio = require('socket.io')
+const http = require('http');
+
 const User = require('../model/user');
 const Conversation = require('../model/conversation')
-const port = process.env.PORT || 5000;
-var socketIOClient = require('socket.io-client')
+const PORT = process.env.PORT || 5000;
+
 var jwt = require('jsonwebtoken');
 var openpgp = require("openpgp")
 var bip39 = require('bip39')
@@ -24,8 +28,10 @@ mongoose.connect('mongodb://localhost:27017/messaging')
 
 
 // Express server
-
 const app = express()
+var server = http.createServer(app);
+var io = socketio(server);
+
 app.use(session({
   secret: 'secret',
   resave: true,
@@ -41,20 +47,23 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(express.static(path.join(__dirname, '../static'), {index: false}))
 app.use('/favicon.ico', express.static('images/favicon.ico'));
 
-var http = require('http').createServer(app);
-var io = require('socket.io')(http);
-// web socket server
-io.on('connection', socket =>{
-  // console.log(`${socket.id} connected`);
-  //console.log(`${username} has connected!`)
-  //console.log(socket.handshake.headers)
-  socket.on('disconnect', () => {
-    console.log(`${socket.id} disconnected`)
-  })
-});
-var server = http.listen(5000, () => {
+server.listen(PORT, () => {
   console.log('server is running on port', server.address().port);
+  setInterval(deleteOldDocument, 5000)
 });
+
+
+io.on('connection', (socket) =>{
+  socket.on("disconnect", () => {
+    console.log("disconnected");
+  });
+
+  socket.on('join-room', (data)=> {
+    socket.join(data.room)
+  })
+
+});
+
 
 // functions
 var genKeyPair = async(username) => {
@@ -69,6 +78,10 @@ var genKeyPair = async(username) => {
     passphrase: '',
   });
   return [ publicKey, privateKey ];
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 function makeid(length) {
@@ -166,6 +179,27 @@ async function get_user_chats(user){
   return users
 }
 
+async function deleteOldDocument(sender, recepient) {
+  // get all chats expiration time
+  let convos = await Conversation.find({}).exec()
+  for (var convo of convos){
+    var msgs = await convo.populate('messages')
+    for (let i = 0; i < msgs['messages'].length; i++){
+      msg = msgs['messages'][i]
+      id = msgs['messages'][i]['_id']
+      let time = (msg['createdAt']/1000 + msg['burn_timer'])
+      const now = new Date().getTime() / 1000
+      if (time < now){
+        await convo.messages.pull({_id: id})
+        await convo.save()
+        // console.log(`${now} vs ${time}`)
+        // console.log(`Deleting ${msg['msg']} from ${convo}`)
+      }
+      await sleep(1500);
+    }
+  }
+}
+
 // SERVER ENDPOINTS
 app.get('/chat/:chat_username', async(req,res) => {
   msg_recepient = req.params.chat_username
@@ -196,6 +230,21 @@ app.get('/chat/:chat_username', async(req,res) => {
 })
 
 
+app.get('/room-id/:chat_username', async(req,res) => {
+  msg_recepient = req.params.chat_username
+  var authed = await check_authed(req)
+  if (authed == true){
+    token = req.session.token
+    sender_name = jwt.decode(token)['username']
+    var convo = await find_convo(sender_name, msg_recepient)
+    room_id = convo._id.toString()
+    console.log(room_id)
+
+    res.send({username: sender_name, room: room_id})
+  }
+})
+
+
 app.get('/messages/:msg_recepient', async (req, res) => {
   msg_recepient = req.params.msg_recepient
   var authed = await check_authed(req)
@@ -203,7 +252,15 @@ app.get('/messages/:msg_recepient', async (req, res) => {
     token = req.session.token
     sender_name = jwt.decode(token)['username']
     var convo = await find_convo(sender_name, msg_recepient)
-    res.send(convo.messages)
+    var msgs = await convo.populate('messages')
+    var msg_text = []
+    for (var msg of msgs['messages']){
+      if (msg['msg'].length > 0){
+        msg_text.push(msg['msg'])
+      }
+    }
+
+    res.send(msg_text)
 
   } else {
     res.render("../../views/error.ejs", {error: "Please sign in to use the app!"})
@@ -214,17 +271,21 @@ app.get('/messages/:msg_recepient', async (req, res) => {
 app.post('/messages/:msg_recepient', async (req, res) => {
   var authed = await check_authed(req)
   if (authed == true){
-    let date_ob = new Date();
-    let hm = `${date_ob.getHours()}h${date_ob.getMinutes()}`
+    // console.log(timer)
     msg_recepient = req.params.msg_recepient
     token = req.session.token
     sender_name = jwt.decode(token)['username']
     var c = await find_convo(sender_name, msg_recepient)
     if (req.body.message.length > 0){
+      let date_ob = new Date();
+      let hm = `${date_ob.getHours()}h${date_ob.getMinutes()}`
+      let timer = req.body.timer
       let msg_str = `${sender_name};^; ${req.body.message};^; ${hm}`
-      await c.messages.push(msg_str)
+      await c.messages.push({burn_timer: timer, msg: msg_str})
       await c.save()
-      io.emit('message', msg_str);
+      room_id = c._id.toString()
+
+      io.sockets.in(room_id).emit('message', msg_str)
     }
   }
 })
@@ -269,15 +330,13 @@ app.get('/search', async (req,res) => {
 app.post('/login', async(req,res) => {
   const found_user = await User.findOne({username: req.body.username}).exec()
   if (found_user == null){
-    return res.json({status: 'does not exist', user: false})
+    res.render('../../views/error.ejs', {error: 'User does not exist!'})
   } else {
     if (found_user.valid_phrase(req.body.wordphrase)){
       var keys = await genKeyPair(req.body.username);
-      // console.log(keys)
       const auth_token = jwt.sign({username: req.body.username}, 'WSP_Project_Spring22')
       found_user.set_public_key(keys[0])
       req.session.token = auth_token
-
       return res.redirect('/')
 
     } else {
