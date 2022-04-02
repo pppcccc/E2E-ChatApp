@@ -17,6 +17,7 @@ const socket = io();
 socket.on('message', message_content => {
   addMessages(message_content)
 })
+
 get_room()
 
 $(() => {
@@ -27,11 +28,17 @@ $(() => {
   })
 
 
-function addMessages(message){
+function addMessages(data){
+  var msg = data.message
+  var txt = data.timer
+  var sender = data.sender
+  var hm = data.sent
   var who = (window.location.pathname.split('/')[2])
-  var sender = message.split(';^; ')[0]
-  var msg = message.split(';^; ')[1]
-  var hm = message.split(';^; ')[2]
+
+  if (txt > 60){
+    txt = `${txt/3600}h`
+  } else txt = '1m'
+
   var timer_val = $("#timer option:selected").val();
   var timer_txt = $("#timer option:selected").text();
   if (sender == who){
@@ -40,23 +47,26 @@ function addMessages(message){
     </div>
       <p class="text"> ${msg} </p>
     </div>
-    <p class="time"> Expires ${timer_txt} <br> Received ${hm} </p><br>`).appendTo("#messages");
+    <p class="time"> Expires ${txt} <br>
+    Received ${hm} </p><br>`).appendTo("#messages");
+
     setTimeout(function() {
       deleteme.remove();
     }, 1000*timer_val);
-
   }
+
   else {
     var deleteme = $(`<div class="message text-only" style="clear: both; ">
           <div class="response">
             <p class="text"> ${msg} </p>
           </div>
       </div>
-      <p class="response-time time" style="clear: both; padding-bottom: 10px;"> Expires ${timer_txt} <br> Delivered ${hm} </p><br>`).appendTo("#messages");
+      <p class="response-time time" style="clear: both; padding-bottom: 10px;"> Expires ${txt} <br>
+      Delivered ${hm} </p><br>`).appendTo("#messages");
 
-   setTimeout(function() {
-     deleteme.remove();
-   }, 1000*timer_val);
+     setTimeout(function() {
+       deleteme.remove();
+     }, 1000*timer_val);
  }
 }
 
@@ -93,11 +103,18 @@ function sendMessage(message, timer){
       <a href="/"><li class="item">
         <i class="fa fa-home" aria-hidden="true"></i>
       </li></a>
-      <a href="/logout"><li class="item">
-        <i class="fa fa-sign-out" aria-hidden="true"></i>
-      </li></a>
+
       <a href="/search"><li class="item">
         <i class="fa fa-search" aria-hidden="true"></i>
+      </li></a>
+
+      <a href="/settings"><li class="item">
+        <i class="fa fa-gear" aria-hidden="true"></i>
+      </li></a>
+
+
+      <a href="/logout"><li class="item">
+        <i class="fa fa-sign-out" aria-hidden="true"></i>
       </li></a>
     </ul>
   </nav>

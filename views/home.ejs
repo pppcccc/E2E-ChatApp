@@ -7,9 +7,21 @@
 <style>
 .parent2 {
   display: grid;
-  grid-template-columns: fit-content(50%) fit-content(50%) fit-content(50%);
-  grid-template-rows: auto;
+  grid-template-columns: repeat(3, 30%);
+  grid-template-rows: 85%;
   justify-content: center;
+}
+
+.card_child{
+  width: 300px;
+  height: 150px;
+}
+
+.alert{
+  margin-left: 25%;
+  width: 40%;
+  justify-content: center;
+  text-align: center;
 }
 
 </style>
@@ -22,35 +34,42 @@
         <a href="/"><li class="item">
           <i class="fa fa-home" aria-hidden="true"></i>
         </li></a>
-        <a href="/logout"><li class="item">
-          <i class="fa fa-sign-out" aria-hidden="true"></i>
-        </li></a>
+
         <a href="/search"><li class="item">
           <i class="fa fa-search" aria-hidden="true"></i>
+        </li></a>
+
+        <a href="/settings"><li class="item">
+          <i class="fa fa-gear" aria-hidden="true"></i>
+        </li></a>
+
+
+        <a href="/logout"><li class="item">
+          <i class="fa fa-sign-out" aria-hidden="true"></i>
         </li></a>
       </ul>
     </nav>
     <div class="container">
       <div class="row">
         <section class="chat">
-            <div class="parent2">
             <% if (chat_usernames.length > 0) {%>
-              <% for (const chat_username of chat_usernames) {%>
+              <div class="parent2">
+              <% for (const chatter of chat_usernames) {%>
                   <div class="col-mx-3 m-3 card_child">
                       <div class="card p-3 py-4">
-                          <div class="text-center"> <img src="https://t4.ftcdn.net/jpg/00/64/67/63/360_F_64676383_LdbmhiNM6Ypzb3FM4PPuFP9rHe7ri8Ju.jpg" width="100" class="rounded-circle"> </div>
-                              <a href="/chat/<%= chat_username %>" align="center" class="profile mt-2 mb-0"> @<%= chat_username %> </a>
-                              <h5 align="center" class="mt-2 mb-0">last online: blah</h5>
+                          <div class="text-center"> <img src="<%= chatter.profile_pic_url %>" width="100" class="rounded-circle"> </div>
+                              <a href="/chat/<%= chatter.username %>" align="center" class="profile mt-2 mb-0"> @<%= chatter.username %> </a>
                               <br>
                       </div>
                   </div>
               <% } %>
+              </div>
             <%} else {%>
-              <div class="alert alert-primary my-3" role="alert">
+              <div align="right" class="alert alert-primary my-3" role="alert">
                 You have no chats. Use the search function <a href="/search" class="alert-link">here</a>.
               </div>
             <% } %>
-            </div>
+
         </section>
       </div>
     </div>

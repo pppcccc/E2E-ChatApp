@@ -1,5 +1,30 @@
 const mongoose = require("mongoose");
 
+const MessageSchema = new mongoose.Schema({
+    burn_timer:{
+      type: Number,
+      required: true
+    },
+    sender: {
+      type: String,
+      required: true
+    },
+    msg: {
+      type: String,
+      required: true,
+      default: ''
+    },
+    createdAt: {
+      type: String,
+      required: true
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now
+    }
+  }
+);
+
 const ConversationSchema = new mongoose.Schema({
     sender: {
       type: String,
@@ -9,14 +34,7 @@ const ConversationSchema = new mongoose.Schema({
       type: String,
       required: true
     },
-    messages: [{
-      type: String,
-      required: true
-    }],
-    timer:{
-      type: Number,
-      required: false
-    }
+    messages: [MessageSchema]
   },
     { collection: "Conversations" }
 );

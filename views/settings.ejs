@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <head>
-<title> Search </title>
+<title> Home </title>
 <link rel="stylesheet" href="/chat.css">
 <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+<style>
+.padded{
+  padding: 2%;
+}
+</style>
 </head>
 
 <body>
-<div class="parent">
-  <div class="child">
+  <div class="parent">
     <nav class="menu">
       <ul class="items">
         <a href="/"><li class="item">
@@ -29,18 +33,22 @@
         </li></a>
       </ul>
     </nav>
-  </div>
-  <div class="container">
-      <section id="search">
-        <div>
-          <form action="/start_chat" method="POST">
-            <div class="input-group input-group-lg my-3">
-              <input class="form-control" type="text" name="msg_recepient" id="msg_recepient" placeholder="Start chatting with a user."></input>
-              <button class="btn btn-primary" type="submit" id="submit"> Chat </button>
+    <div class="container">
+      <div class="row">
+        <div class="p-3">
+          <form method="POST" action="/save_settings">
+            <div class="mb-3">
+              <label for="change_username" class="form-label"> Username: </label>
+              <input id="change_username" name="change_username" minlength="1" maxlength="32" class="form-control" disabled></input>
+              <br>
+              <label for="change_pfp" class="form-label"> Profile Picture URL: </label>
+              <input id="change_pfp" name="change_pfp" class="form-control"></input>
+              <br>
+              <button class="btn btn-primary" type="submit"> Save Changes </button>
             </div>
           </form>
         </div>
-      </section>
+      </div>
+    </div>
   </div>
-</div>
 </body>

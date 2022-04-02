@@ -4,8 +4,6 @@
 // https://www.freecodecamp.org/news/simple-chat-application-in-node-js-using-express-mongoose-and-socket-io-ee62d94f5804/
 // https://codepen.io/ThomasDaubenton/pen/QMqaBN
 // https://www.section.io/engineering-education/creating-a-real-time-chat-app-with-react-socket-io-with-e2e-encryption/
-
-require("dotenv").config()
 const express = require("express")
 const session = require('express-session');
 const mongoose = require("mongoose")
@@ -22,10 +20,16 @@ const PORT = process.env.PORT || 5000;
 var jwt = require('jsonwebtoken');
 var openpgp = require("openpgp")
 var bip39 = require('bip39')
+var aes256 = require('aes256');
+
+// get env from parent directory
+require("dotenv").config({path: path.join(process.cwd(), "..", ".env")})
 
 // Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/messaging')
+mongoose.connect(process.env.MONGODB_URI)
 
+// get the AES256 secret key
+const secret_key = process.env.AES256_SECRET_KEY
 
 // Express server
 const app = express()
@@ -64,21 +68,7 @@ io.on('connection', (socket) =>{
 
 });
 
-
 // functions
-var genKeyPair = async(username) => {
-  var { publicKey, privateKey } = await openpgp.generateKey({
-    userIDs: [
-      {
-        name: `${username}`,
-        email: `${username}@m${makeid(25)}.com`
-      }
-    ],
-    curve: 'ed25519',
-    passphrase: '',
-  });
-  return [ publicKey, privateKey ];
-}
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -181,24 +171,26 @@ async function get_user_chats(user){
 
 async function deleteOldDocument(sender, recepient) {
   // get all chats expiration time
+  //console.log('deleting')
   let convos = await Conversation.find({}).exec()
   for (var convo of convos){
     var msgs = await convo.populate('messages')
     for (let i = 0; i < msgs['messages'].length; i++){
       msg = msgs['messages'][i]
       id = msgs['messages'][i]['_id']
-      let time = (msg['createdAt']/1000 + msg['burn_timer'])
+      let time = (msg['timestamp']/1000 + msg['burn_timer'])
       const now = new Date().getTime() / 1000
       if (time < now){
         await convo.messages.pull({_id: id})
         await convo.save()
-        // console.log(`${now} vs ${time}`)
-        // console.log(`Deleting ${msg['msg']} from ${convo}`)
+        /*console.log(`${now} vs ${time}`)
+        console.log(`Deleting ${msg['msg']} from ${convo}`)*/
       }
-      await sleep(1500);
+      await sleep(2000);
     }
   }
 }
+
 
 // SERVER ENDPOINTS
 app.get('/chat/:chat_username', async(req,res) => {
@@ -238,7 +230,6 @@ app.get('/room-id/:chat_username', async(req,res) => {
     sender_name = jwt.decode(token)['username']
     var convo = await find_convo(sender_name, msg_recepient)
     room_id = convo._id.toString()
-    console.log(room_id)
 
     res.send({username: sender_name, room: room_id})
   }
@@ -253,14 +244,15 @@ app.get('/messages/:msg_recepient', async (req, res) => {
     sender_name = jwt.decode(token)['username']
     var convo = await find_convo(sender_name, msg_recepient)
     var msgs = await convo.populate('messages')
-    var msg_text = []
+    let msg_text = []
     for (var msg of msgs['messages']){
       if (msg['msg'].length > 0){
-        msg_text.push(msg['msg'])
+        var decrypted_msg = aes256.decrypt(secret_key, msg['msg'])
+        msg_text.push({message: decrypted_msg, timer: msg['burn_timer'], sender: msg['sender'], sent: msg['createdAt']})
       }
     }
 
-    res.send(msg_text)
+    await res.send(msg_text)
 
   } else {
     res.render("../../views/error.ejs", {error: "Please sign in to use the app!"})
@@ -280,13 +272,63 @@ app.post('/messages/:msg_recepient', async (req, res) => {
       let date_ob = new Date();
       let hm = `${date_ob.getHours()}h${date_ob.getMinutes()}`
       let timer = req.body.timer
-      let msg_str = `${sender_name};^; ${req.body.message};^; ${hm}`
-      await c.messages.push({burn_timer: timer, msg: msg_str})
+      let msg_str = req.body.message
+      var encrypted_msg = aes256.encrypt(secret_key, msg_str)
+      let creation_date = new Date()
+      const creation_str = creation_date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
+      await c.messages.push({burn_timer: timer, sender: sender_name, msg: encrypted_msg, createdAt: creation_str})
       await c.save()
       room_id = c._id.toString()
 
-      io.sockets.in(room_id).emit('message', msg_str)
+      io.sockets.in(room_id).emit('message', {message: msg_str, timer: timer, sender: sender_name, sent: creation_str})
     }
+  }
+})
+
+
+app.get('/settings', async (req,res) => {
+  var authed = await check_authed(req)
+  if (authed == true){
+    token = req.session.token
+    username = jwt.decode(token)['username']
+
+    res.render('../../views/settings.ejs', {username: username})
+  } else {
+    res.render("../../views/error.ejs", {error: "Please sign in to use the app!"})
+  }
+})
+
+
+app.post('/save_settings', async (req,res) => {
+  var authed = await check_authed(req)
+  if (authed == true){
+    token = req.session.token
+    username = jwt.decode(token)['username']
+    desired_username = req.body.change_username
+    pfp_url = req.body.change_pfp
+    var current_user = await User.findOne({username: username}).exec()
+
+    /*
+    if (desired_username){
+      var desired_user = await User.findOne({username: desired_username}).exec()
+      if (!desired_user){
+        await current_user.set_username(desired_username)
+        await current_user.save()
+        const auth_token = jwt.sign({username: desired_username}, 'WSP_Project_Spring22')
+        req.session.token = auth_token
+      }
+    }
+    */
+
+    if (pfp_url){
+      await current_user.set_profile_picture(pfp_url)
+      await current_user.save()
+    }
+
+    res.redirect('/')
+
+  } else {
+    res.render("../../views/error.ejs", {error: "Please sign in to use the app!"})
   }
 })
 
@@ -296,8 +338,13 @@ app.get('/', async(req,res) => {
   if (authed == true){
     token = req.session.token
     username = jwt.decode(token)['username']
-    // console.log(username)
-    var current_chats = await get_user_chats(username)
+    var current_chats = []
+    var user_chats = await get_user_chats(username)
+    for (const user of user_chats){
+      var u = await User.findOne({username: user}).exec()
+      await current_chats.push(u)
+    }
+
     res.render('../../views/home.ejs', {username: username, chat_usernames: current_chats})
   } else {
     res.render('../../static/index.ejs')
@@ -333,9 +380,7 @@ app.post('/login', async(req,res) => {
     res.render('../../views/error.ejs', {error: 'User does not exist!'})
   } else {
     if (found_user.valid_phrase(req.body.wordphrase)){
-      var keys = await genKeyPair(req.body.username);
       const auth_token = jwt.sign({username: req.body.username}, 'WSP_Project_Spring22')
-      found_user.set_public_key(keys[0])
       req.session.token = auth_token
       return res.redirect('/')
 
@@ -348,15 +393,13 @@ app.post('/login', async(req,res) => {
 
 
 app.post('/register', async (req,res)=> {
-  const found_user = await User.findOne({username: req.body.username}).exec()
+  const found_user = await User.findOne({username: req.body.register_username}).exec()
   if (!found_user){
     let new_user = new User();
-    var keys = await genKeyPair(req.body.username);
 
-    new_user.username = req.body.username;
+    new_user.username = req.body.register_username;
     const mnemonic = `${bip39.generateMnemonic()} ${bip39.generateMnemonic()}`
     new_user.set_word_phrase(mnemonic)
-    new_user.set_public_key(keys[0]);
 
     const auth_token = jwt.sign({username: new_user.username}, 'schoolproject2022')
     req.session.token = auth_token
@@ -366,7 +409,7 @@ app.post('/register', async (req,res)=> {
             res.render('../../views/error.ejs', {error: err})
         }
         else {
-            res.render('../../views/registered.ejs', {username: req.body.username, mnemonic: mnemonic})
+            res.render('../../views/registered.ejs', {username: req.body.register_username, mnemonic: mnemonic})
         }
     });
   } else {
@@ -391,21 +434,4 @@ app.post('/start_chat', async (req,res) => {
     res.render('../../views/error.ejs', {error: 'Please sign in to use the app!'})
   }
 
-})
-
-
-app.post('/encrypt_msg', async (req,res)=>{
-  const message = req.body.msg;
-  const pgp_key = publicKeyArmored;
-  const encrypted_msg = await pgp_encrypt(message, pgp_key);
-  res.render("../../views/encrypted", {msg:encrypted_msg});
-})
-
-
-app.post('/decrypt_msg', async (req,res)=>{
-  const message = req.body.msg;
-  const pgp_key = privateKeyArmored;
-  message.replace(/\s/g, '\n')
-  const decrypted_msg = await pgp_decrypt(message, pgp_key, passphrase);
-  res.render("../../views/decrypted", {msg:decrypted_msg });
 })

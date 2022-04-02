@@ -13,10 +13,11 @@
         <section id="register_and_login">
           <div align="center" class="parent my-5">
             <div>
-              <h2> Register or Login to Your Account </h2>
+              <h1> 🔒 E2E-Encrypted Chat App 🔒 </h1>
+              <h3> Register or Login to Your Account </h3>
               <br>
               <form action="/register" method="POST">
-                <input required="true" minlength="1" maxlength="32" type="text" id="username" name="username" placeholder="enter desired username" cols="20" rows="5"></input>
+                <input required="true" minlength="1" maxlength="32" type="text" id="register_username" name="register_username" placeholder="Desired Username" cols="20" rows="5"></input>
                 <br>
                 <button class="btn btn-primary my-2" type="submit" id="reg_btn">Generate Login</button>
               </form>
@@ -24,8 +25,8 @@
 
             <div class="my-5">
               <form action="/login" method="POST">
-                <input required="true" minlength="1" maxlength="32" type="text" id="username" name="username" placeholder="enter your username" cols="20" rows="5"></input>
-                <input required="true" minlength="1" type="password" id="wordphrase" name="wordphrase" placeholder="enter 24 word passphrase" cols="40" rows="5"></input>
+                <input required="true" minlength="1" maxlength="32" type="text" id="username" name="username" placeholder="Username"></input>
+                <input required="true" minlength="1" type="password" id="wordphrase" name="wordphrase" placeholder="Passphrase"></input>
                 <br>
                 <button class="btn btn-primary my-2" type="submit" id="login_btn">Login</button>
               </form>
