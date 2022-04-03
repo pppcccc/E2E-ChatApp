@@ -58,14 +58,9 @@ server.listen(PORT, () => {
 
 
 io.on('connection', (socket) =>{
-  socket.on("disconnect", () => {
-    console.log("disconnected");
-  });
-
   socket.on('join-room', (data)=> {
     socket.join(data.room)
   })
-
 });
 
 // functions
@@ -193,28 +188,132 @@ async function deleteOldDocument(sender, recepient) {
 
 
 // SERVER ENDPOINTS
+
+app.get('/', async(req,res) => {
+  var authed = await check_authed(req)
+  if (authed == true){
+    token = req.session.token
+    username = jwt.decode(token)['username']
+    var current_chats = []
+    var user_chats = await get_user_chats(username)
+    for (const user of user_chats){
+      var u = await User.findOne({username: user}).exec()
+      await current_chats.push(u)
+    }
+
+    res.render('../../views/home.ejs', {username: username, chat_usernames: current_chats})
+  } else {
+    res.render('../../static/index.ejs')
+
+  }
+
+})
+
+
+app.post('/login', async(req,res) => {
+  const found_user = await User.findOne({username: req.body.username}).exec()
+  if (found_user == null){
+    res.render('../../views/error.ejs', {error: 'User does not exist!'})
+  } else {
+    if (found_user.valid_phrase(req.body.wordphrase)){
+      const auth_token = jwt.sign({username: req.body.username}, 'WSP_Project_Spring22')
+      req.session.token = auth_token
+      return res.redirect('/')
+
+    } else {
+      res.render('../../views/error.ejs', {error: 'Wrong passphrase!'})
+    }
+  }
+  res.redirect('/')
+})
+
+
+app.post('/register', async (req,res)=> {
+  const found_user = await User.findOne({username: req.body.register_username}).exec()
+  if (!found_user){
+    let new_user = new User();
+
+    new_user.username = req.body.register_username;
+    const mnemonic = `${bip39.generateMnemonic()} ${bip39.generateMnemonic()}`
+    new_user.set_word_phrase(mnemonic)
+
+    const auth_token = jwt.sign({username: new_user.username}, 'schoolproject2022')
+    req.session.token = auth_token
+
+    new_user.save((err, User) => {
+        if (err) {
+            res.render('../../views/error.ejs', {error: err})
+        }
+        else {
+            res.render('../../views/registered.ejs', {username: req.body.register_username, mnemonic: mnemonic})
+        }
+    });
+  } else {
+    let err = 'User already exists with that name.'
+    res.render('../../views/error.ejs', {error: err})
+  }
+
+})
+
+
+app.get('/logout', async (req,res) => {
+  var authed = await check_authed(req)
+  if (authed == true){
+    req.session.destroy((err) => {
+          if(err) {
+              return console.log(err);
+          }
+          res.redirect('/');
+    })
+  } else {
+    res.render('../../views/error.ejs', {error: 'Can not log out when you are not logged in!'})
+  }
+})
+
+
+app.post('/start_chat', async (req,res) => {
+  msg_recepient = req.body.msg_recepient
+  var authed = await check_authed(req)
+  if (authed == true){
+    const found_user = await User.findOne({username: msg_recepient}).exec()
+    if (found_user != null){
+      res.redirect(`/chat/${msg_recepient}`)
+    } else {
+      res.render('../../views/error.ejs', {error: 'Can not chat with a user that does not exist!'})
+    }
+  } else {
+    res.render('../../views/error.ejs', {error: 'Please sign in to use the app!'})
+  }
+
+})
+
+
 app.get('/chat/:chat_username', async(req,res) => {
   msg_recepient = req.params.chat_username
   var authed = await check_authed(req)
   if (authed == true){
     token = req.session.token
     sender_name = jwt.decode(token)['username']
-    const found_user = await User.findOne({username: msg_recepient}).exec()
-    if (found_user == null){
-      res.render('../../views/error.ejs', {error: 'Can not chat with a user that does not exist!'})
-    } else if (sender_name == msg_recepient) {
-      res.render('../../views/error.ejs', {error: 'Can not chat with yourself!'})
-    } else {
-      var convo = await find_convo(sender_name, msg_recepient)
-      if (convo == null){
-          let new_convo = new Conversation()
-          new_convo.sender = sender_name
-          new_convo.recepient = msg_recepient
-          new_convo.messages = []
-          new_convo.save()
-      }
+    if (msg_recepient){
+      const found_user = await User.findOne({username: msg_recepient}).exec()
+      if (found_user == null){
+        res.render('../../views/error.ejs', {error: 'Can not chat with a user that does not exist!'})
+      } else if (sender_name == msg_recepient) {
+        res.render('../../views/error.ejs', {error: 'Can not chat with yourself!'})
+      } else {
+        var convo = await find_convo(sender_name, msg_recepient)
+        if (convo == null){
+            let new_convo = new Conversation()
+            new_convo.sender = sender_name
+            new_convo.recepient = msg_recepient
+            new_convo.messages = []
+            new_convo.save()
+        }
 
-      return res.render('../../views/chat.ejs')
+        res.render('../../views/chat.ejs')
+      }
+    } else {
+      res.render('../../views/error.ejs', {error: 'Please start a chat with a user!'})
     }
   } else {
     res.render('../../views/error.ejs', {error: 'Please sign in to use the app!'})
@@ -286,6 +385,16 @@ app.post('/messages/:msg_recepient', async (req, res) => {
 })
 
 
+app.get('/search', async (req,res) => {
+  var authed = await check_authed(req)
+  if (authed == true){
+    res.render("../../views/search.ejs")
+  } else {
+    res.render("../../views/error.ejs", {error: "Please sign in to use the app!"})
+  }
+})
+
+
 app.get('/settings', async (req,res) => {
   var authed = await check_authed(req)
   if (authed == true){
@@ -333,105 +442,6 @@ app.post('/save_settings', async (req,res) => {
 })
 
 
-app.get('/', async(req,res) => {
-  var authed = await check_authed(req)
-  if (authed == true){
-    token = req.session.token
-    username = jwt.decode(token)['username']
-    var current_chats = []
-    var user_chats = await get_user_chats(username)
-    for (const user of user_chats){
-      var u = await User.findOne({username: user}).exec()
-      await current_chats.push(u)
-    }
-
-    res.render('../../views/home.ejs', {username: username, chat_usernames: current_chats})
-  } else {
-    res.render('../../static/index.ejs')
-
-  }
-
-})
-
-
-app.get('/logout', async (req,res) => {
-  req.session.destroy((err) => {
-        if(err) {
-            return console.log(err);
-        }
-        res.redirect('/');
-  });
-})
-
-
-app.get('/search', async (req,res) => {
-  var authed = await check_authed(req)
-  if (authed == true){
-    res.render("../../views/search.ejs")
-  } else {
-    res.render("../../views/error.ejs", {error: "Please sign in to use the app!"})
-  }
-})
-
-
-app.post('/login', async(req,res) => {
-  const found_user = await User.findOne({username: req.body.username}).exec()
-  if (found_user == null){
-    res.render('../../views/error.ejs', {error: 'User does not exist!'})
-  } else {
-    if (found_user.valid_phrase(req.body.wordphrase)){
-      const auth_token = jwt.sign({username: req.body.username}, 'WSP_Project_Spring22')
-      req.session.token = auth_token
-      return res.redirect('/')
-
-    } else {
-      res.render('../../views/error.ejs', {error: 'Wrong passphrase!'})
-    }
-  }
-  res.redirect('/')
-})
-
-
-app.post('/register', async (req,res)=> {
-  const found_user = await User.findOne({username: req.body.register_username}).exec()
-  if (!found_user){
-    let new_user = new User();
-
-    new_user.username = req.body.register_username;
-    const mnemonic = `${bip39.generateMnemonic()} ${bip39.generateMnemonic()}`
-    new_user.set_word_phrase(mnemonic)
-
-    const auth_token = jwt.sign({username: new_user.username}, 'schoolproject2022')
-    req.session.token = auth_token
-
-    new_user.save((err, User) => {
-        if (err) {
-            res.render('../../views/error.ejs', {error: err})
-        }
-        else {
-            res.render('../../views/registered.ejs', {username: req.body.register_username, mnemonic: mnemonic})
-        }
-    });
-  } else {
-    let err = 'User already exists with that name.'
-    res.render('../../views/error.ejs', {error: err})
-  }
-
-})
-
-
-app.post('/start_chat', async (req,res) => {
-  msg_recepient = req.body.msg_recepient
-  var authed = await check_authed(req)
-  if (authed == true){
-    const found_user = await User.findOne({username: msg_recepient}).exec()
-    if (found_user != null){
-      res.redirect(`/chat/${msg_recepient}`)
-    } else {
-      res.render('../../views/error.ejs', {error: 'Can not chat with a user that does not exist!'})
-    }
-  } else {
-    res.render('../../views/error.ejs', {error: 'Please sign in to use the app!'})
-  }
-
-})
+app.get('*', function(req, res) {
+  return res.redirect('/')
+});

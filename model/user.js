@@ -1,8 +1,7 @@
-// Importing modules
 const mongoose = require("mongoose");
 var crypto = require('crypto');
 
-// Creating user schema
+
 const UserSchema = new mongoose.Schema({
     username: {
       type: String,
@@ -51,5 +50,5 @@ UserSchema.methods.valid_phrase = function(word_phrase) {
     return this.hash === _hash;
 };
 
-// Exporting module to allow it to be imported in other files
+
 module.exports = mongoose.model('User', UserSchema);
