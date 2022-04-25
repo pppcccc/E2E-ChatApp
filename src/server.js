@@ -16,6 +16,8 @@ const http = require('http');
 const User = require('../model/user');
 const Conversation = require('../model/conversation')
 const PORT = process.env.PORT || 5000;
+const URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/messaging'
+const secret_key = process.env.AES256_SECRET_KEY || 'secret key';
 
 var jwt = require('jsonwebtoken');
 var openpgp = require("openpgp")
@@ -23,13 +25,13 @@ var bip39 = require('bip39')
 var aes256 = require('aes256');
 
 // get env from parent directory
-require("dotenv").config({path: path.join(process.cwd(), "..", ".env")})
+require("dotenv").config({path: path.join(process.cwd(), "..", "cfg.env")})
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
+mongoose.connect(URI)
 
 // get the AES256 secret key
-const secret_key = process.env.AES256_SECRET_KEY
+
 
 // Express server
 const app = express()
@@ -213,7 +215,7 @@ app.get('/', async(req,res) => {
 app.post('/login', async(req,res) => {
   const found_user = await User.findOne({username: req.body.username}).exec()
   if (found_user == null){
-    res.render('../../views/error.ejs', {error: 'User does not exist!'})
+    return res.render('../../views/error.ejs', {error: 'User does not exist!'})
   } else {
     if (found_user.valid_phrase(req.body.wordphrase)){
       const auth_token = jwt.sign({username: req.body.username}, 'WSP_Project_Spring22')
@@ -221,10 +223,9 @@ app.post('/login', async(req,res) => {
       return res.redirect('/')
 
     } else {
-      res.render('../../views/error.ejs', {error: 'Wrong passphrase!'})
+      return res.render('../../views/error.ejs', {error: 'Wrong passphrase!'})
     }
   }
-  res.redirect('/')
 })
 
 

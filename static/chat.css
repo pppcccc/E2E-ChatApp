@@ -7,8 +7,9 @@ body {
 .container {
   background-color: #FFF;
   box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
-  height: 700px;
+  height: 70vh;
   overflow-y: scroll;
+  overflow-x: hidden;
 }
 
 /* ===== MENU ===== */
@@ -16,8 +17,8 @@ body {
 .menu {
   float: left;
   position: relative;
-  left: 15%;
-  height: 700px;
+  left: 1vw;
+  height: 70vh;
   width: 70px;
   background: #4768b5;
   background: -webkit-linear-gradient(#4768b5, #35488e);
@@ -119,6 +120,7 @@ body {
 .chat .messages-chat {
   padding: 25px 20px;
   white-space: normal;
+  word-wrap: break-word;
 }
 
 .chat .messages-chat .message {
@@ -145,11 +147,13 @@ body {
   background-color: #f6f6f6;
   padding: 12px;
   border-radius: 12px;
+  overflow-wrap: break-word;
 }
 
 .text-only {
   float: right;
   margin-left: 45px;
+  overflow-wrap: break-word;
 }
 
 .time {
@@ -169,6 +173,7 @@ body {
   float: right;
   margin-right: 0px !important;
   margin-left:auto; /* flexbox alignment rule */
+  overflow-wrap: break-word;
 }
 
 .response .text {
@@ -176,15 +181,14 @@ body {
 }
 
 .footer-chat {
-  width: calc(65% - 66px);
+  width: 80vw;
   height: 80px;
-  display:flex;
+  display: flex;
   align-items: center;
-  position:absolute;
+  position: absolute;
   bottom: 0;
   background-color: transparent;
   border-top: 2px solid #EEE;
-
 }
 
 .chat .footer-chat .icon {

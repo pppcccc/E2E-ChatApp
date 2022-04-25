@@ -8,6 +8,7 @@
 a, a:visited, a:hover{
      color:#fff;
 }
+
 </style>
 <script src="/socket.io/socket.io.js"></script>
 <script type = "text/javascript"
@@ -34,10 +35,11 @@ function addMessages(data){
   var sender = data.sender
   var hm = data.sent
   var who = (window.location.pathname.split('/')[2])
+  var str_text = ''
 
   if (txt > 60){
-    txt = `${txt/3600}h`
-  } else txt = '1m'
+    str_txt = `${txt/3600}h`
+  } else str_txt = '1m'
 
   var timer_val = $("#timer option:selected").val();
   var timer_txt = $("#timer option:selected").text();
@@ -47,12 +49,12 @@ function addMessages(data){
     </div>
       <p class="text"> ${msg} </p>
     </div>
-    <p class="time"> Expires ${txt} <br>
+    <p class="time"> Expires ${str_txt} <br>
     Received ${hm} </p><br>`).appendTo("#messages");
 
     setTimeout(function() {
       deleteme.remove();
-    }, 1000*timer_val);
+    }, 1000*txt);
   }
 
   else {
@@ -61,12 +63,12 @@ function addMessages(data){
             <p class="text"> ${msg} </p>
           </div>
       </div>
-      <p class="response-time time" style="clear: both; padding-bottom: 10px;"> Expires ${txt} <br>
+      <p class="response-time time" style="clear: both; padding-bottom: 10px;"> Expires ${str_txt} <br>
       Delivered ${hm} </p><br>`).appendTo("#messages");
 
      setTimeout(function() {
        deleteme.remove();
-     }, 1000*timer_val);
+     }, 1000*txt);
  }
 }
 
@@ -140,8 +142,9 @@ function sendMessage(message, timer){
 
             </div>
           </div>
+
           <div class="footer-chat">
-            <textarea type="text" class="write-message" id="message" minlength="1" placeholder="Type your message here"></textarea>
+            <textarea type="text" class="write-message" id="message"  style="resize: none;" minlength="1" placeholder="Type your message here"></textarea>
             <i class="icon send fa fa-paper-plane-o clickable" id="send" aria-hidden="true"></i>
           </div>
         </section>
