@@ -40,10 +40,6 @@ UserSchema.methods.set_username = function(username){
   this.username = username
 }
 
-UserSchema.methods.set_public_key = function(public_key) {
-    this.publickey = public_key;
-}
-
 UserSchema.methods.valid_phrase = function(word_phrase) {
     var _hash = crypto.pbkdf2Sync(word_phrase,
     this.salt, 1000, 64, `sha512`).toString(`hex`);

@@ -17,7 +17,8 @@ const User = require('../model/user');
 const Conversation = require('../model/conversation')
 const PORT = process.env.PORT || 5000;
 const URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/messaging'
-const secret_key = process.env.AES256_SECRET_KEY || 'secret key';
+const SECRET_KEY = process.env.AES256_SECRET_KEY || 'secret key';
+const SESSION_SECRET = process.env.SESSION_SECRET || 'session secret';
 
 var jwt = require('jsonwebtoken');
 var bip39 = require('bip39')
@@ -29,16 +30,13 @@ require("dotenv").config({path: path.join(process.cwd(), "..", "cfg.env")})
 // Connect to MongoDB
 mongoose.connect(URI)
 
-// get the AES256 secret key
-
-
 // Express server
 const app = express()
 var server = http.createServer(app);
 var io = socketio(server);
 
 app.use(session({
-  secret: 'secret',
+  secret: SESSION_SECRET,
   resave: true,
   saveUninitialized: false,
   cookie: {
@@ -64,8 +62,7 @@ io.on('connection', (socket) =>{
   })
 });
 
-// functions
-
+/* FUNCTIONS */
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -144,7 +141,7 @@ async function deleteOldDocument(sender, recepient) {
 }
 
 
-// SERVER ENDPOINTS
+/* SERVER ENDPOINTS */
 
 app.get('/', async(req,res) => {
   var authed = await check_authed(req)
@@ -302,7 +299,7 @@ app.get('/messages/:msg_recepient', async (req, res) => {
     let msg_text = []
     for (var msg of msgs['messages']){
       if (msg['msg'].length > 0){
-        var decrypted_msg = aes256.decrypt(secret_key, msg['msg'])
+        var decrypted_msg = aes256.decrypt(SECRET_KEY, msg['msg'])
         msg_text.push({message: decrypted_msg, timer: msg['burn_timer'], sender: msg['sender'], sent: msg['createdAt']})
       }
     }
@@ -328,7 +325,7 @@ app.post('/messages/:msg_recepient', async (req, res) => {
       let hm = `${date_ob.getHours()}h${date_ob.getMinutes()}`
       let timer = req.body.timer
       let msg_str = req.body.message
-      var encrypted_msg = aes256.encrypt(secret_key, msg_str)
+      var encrypted_msg = aes256.encrypt(SECRET_KEY, msg_str)
       let creation_date = new Date()
       const creation_str = creation_date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
       await c.messages.push({burn_timer: timer, sender: sender_name, msg: encrypted_msg, createdAt: creation_str})
