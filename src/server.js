@@ -20,7 +20,6 @@ const URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/messaging'
 const secret_key = process.env.AES256_SECRET_KEY || 'secret key';
 
 var jwt = require('jsonwebtoken');
-var openpgp = require("openpgp")
 var bip39 = require('bip39')
 var aes256 = require('aes256');
 
@@ -69,50 +68,6 @@ io.on('connection', (socket) =>{
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function makeid(length) {
-    var result           = '';
-    var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    var charactersLength = characters.length;
-    for ( var i = 0; i < length; i++ ) {
-      result += characters.charAt(Math.floor(Math.random() *
-      charactersLength));
-   }
-   return result;
-}
-
-async function pgp_encrypt(msg, _publicKey) {
-  //console.log(`Raw Message: ${msg}`)
-  const publicKey = await openpgp.readKey({ armoredKey: _publicKey });
-  const encrypted = await openpgp.encrypt({
-    message: await openpgp.createMessage({ text: msg }),
-    encryptionKeys: publicKey
-  });
-
-  //console.log(`Encrypted Message: ${encrypted}`)
-  return encrypted
-}
-
-async function pgp_decrypt(encrypted, _privateKey, passphrase){
-  //console.log(`Encrypted Message: ${encrypted}`)
-
-  const privateKey = await openpgp.decryptKey({
-        privateKey: await openpgp.readPrivateKey({ armoredKey: _privateKey }),
-        passphrase
-  });
-
-  const message = await openpgp.readMessage({
-        armoredMessage: encrypted // parse armored message
-  });
-
-  const { data: decrypted, signatures } = await openpgp.decrypt({
-        message,
-        decryptionKeys: privateKey
-  });
-
-  //console.log(`Decrypted Message: ${decrypted}`)
-  return decrypted
 }
 
 async function check_authed(req){

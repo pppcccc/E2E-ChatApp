@@ -125,7 +125,6 @@ body {
 
 .chat .messages-chat .message {
   display:flex;
-  margin-bottom: 8px;
   max-width: 80%;
   word-wrap: break-word;
 }
@@ -152,6 +151,7 @@ body {
 
 .text-only {
   float: right;
+  display: block;
   margin-left: 45px;
   overflow-wrap: break-word;
 }

@@ -44,7 +44,7 @@ function addMessages(data){
   var timer_val = $("#timer option:selected").val();
   var timer_txt = $("#timer option:selected").text();
   if (sender == who){
-    var deleteme = $(`<div class="message">
+    var deleteme = $(`<div class="message" style="padding-top: 5%;">
     <div class="photo" style="background-image: url('https://t4.ftcdn.net/jpg/00/64/67/63/360_F_64676383_LdbmhiNM6Ypzb3FM4PPuFP9rHe7ri8Ju.jpg');">
     </div>
       <p class="text"> ${msg} </p>
@@ -58,7 +58,7 @@ function addMessages(data){
   }
 
   else {
-    var deleteme = $(`<div class="message text-only" style="clear: both; ">
+    var deleteme = $(`<div class="message text-only" style="clear: both;">
           <div class="response">
             <p class="text"> ${msg} </p>
           </div>
