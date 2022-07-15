@@ -7,10 +7,11 @@ How to run:
 3. Open Terminal and cd to the location
 4. Type "npm i --save"
 5. Create a file "config.env" in your root directory, and set a secret phrase for the AES256 encryption
-AES256_SECRET_KEY = *SECRET KEY HERE*\n
-PORT = *PORT HERE*\n
-MONGODB_URI = *MONGODB URI HERE*
 
+
+AES256_SECRET_KEY = *SECRET KEY HERE*  
+PORT = *PORT HERE*  
+MONGODB_URI = *MONGODB URI HERE*
 
 Port will default to 5000, and the URI will default to mongodb://localhost:27017/messaging, and the secret key is necessary to input if you want the service to be secure.
 
