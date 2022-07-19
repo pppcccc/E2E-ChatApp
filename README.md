@@ -6,7 +6,7 @@ How to run:
 2. Extract files to a location
 3. Open Terminal and cd to the location
 4. Type "npm i --save"
-5. Create a file "config.env" in your root directory, and set a secret phrase for the AES256 encryption
+5. Create a file "cfg.env" in your root directory, and set a secret phrase for the AES256 encryption
 
 
 AES256_SECRET_KEY = *SECRET KEY HERE*  
